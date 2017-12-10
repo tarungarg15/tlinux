@@ -7,13 +7,20 @@
 #include <linux/errno.h>
 #include <asm/current.h>
 #include <linux/slab.h>
+#include <linux/device.h>
+#include <asm/uaccess.h>
+
 
 #define CHAR_DEV_NAME 					"char_driver_dynamic"
 #define MAX_LENGTH 						4000
 #define SUCCESS 						0
 
+#define FIRST_MINOR 0
+#define MINOR_CNT 1
+
 static char *char_device_buf;
 struct cdev *c_cdev;
+static struct class *cl;
 dev_t mydev;
 
 /*********************************************************************************
@@ -96,6 +103,8 @@ static __init int my_module_init(void)
 {
 	int ret,count=1;
 
+	struct device *dev_ret;
+
 	if (alloc_chrdev_region (&mydev, 0, count, CHAR_DEV_NAME) < 0) 
 	{
 		printk (KERN_ERR "failed to reserve major/minor range\n");
@@ -122,6 +131,21 @@ static __init int my_module_init(void)
 	printk(KERN_INFO"\n Device Registered: %s\n",CHAR_DEV_NAME);
 	printk (KERN_INFO " char_drv_dynamic Major number = %d, Minor number = %d\n", MAJOR (mydev),MINOR (mydev));
 	char_device_buf =(char *)kmalloc(MAX_LENGTH,GFP_KERNEL);
+
+	if (IS_ERR(cl = class_create(THIS_MODULE, "char")))
+	{
+		cdev_del(&c_cdev);
+		unregister_chrdev_region(mydev, MINOR_CNT);
+		return PTR_ERR(cl);
+	}
+	if (IS_ERR(dev_ret = device_create(cl, NULL, mydev, NULL, "mydynamic_char%d", FIRST_MINOR)))
+	{
+		class_destroy(cl);
+		cdev_del(&c_cdev);
+		unregister_chrdev_region(mydev, MINOR_CNT);
+		return PTR_ERR(dev_ret);
+	}
+
 	return 0;
 }
 

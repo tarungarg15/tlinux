@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <errno.h>
 
-#define CHAR_DEV_NAME "/dev/mydynamic_char0"
+#define CHAR_DEV_NAME "/dev/mychar0"
 
 int main()
 {

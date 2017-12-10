@@ -50,6 +50,7 @@ static ssize_t char_dev_read(struct file *f, char __user *buf, size_t len, loff_
 			return -EFAULT;
 		}
 		*off += 1;
+		printk(KERN_INFO "char_dev_read fn called \n");
 		return 1;
 	}
 	else
@@ -67,6 +68,7 @@ static ssize_t char_dev_write(struct file *f, const char __user *buf, size_t len
 	{
 	 	return -EFAULT;
 	}	
+	printk(KERN_INFO "char_dev_write fn called \n");
 	return len;
 }
 
@@ -107,8 +109,8 @@ static int __init my_module_init(void)
 		unregister_chrdev_region (mydev, count);
 		return -1;
  	}
-	cdev_init(&c_dev, &char_dev_fops);
-	if ((ret = cdev_add(&c_dev, mydev, MINOR_CNT)) < 0)
+	cdev_init(c_dev, &char_dev_fops);
+	if ((ret = cdev_add(c_dev, mydev, MINOR_CNT)) < 0)
 	{
 		unregister_chrdev_region(mydev, MINOR_CNT);
 		return ret;
